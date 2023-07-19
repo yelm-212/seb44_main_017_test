@@ -56,7 +56,7 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           DOCKER_REPO: ${{ secrets.DOCKER_REPO }}
         run: |
-          docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+          docker login -u $DOCKER_USERNAME --password-stdin $DOCKER_PASSWORD
           docker build -t $DOCKER_REPO/seb44_main_017:latest ./
           docker push $DOCKER_REPO/seb44_main_017:latest
 
