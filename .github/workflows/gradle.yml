@@ -21,11 +21,8 @@ defaults:
     working-directory: server
 
 jobs:
-  secrets:
-    environment: docker_on_ec2
-#  build:
+  build:
     runs-on: ubuntu-latest
-
     steps:
       ## JDK setting
 
