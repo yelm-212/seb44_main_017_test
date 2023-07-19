@@ -59,13 +59,13 @@ jobs:
 
       ## push to docker hub
       - name: web docker build and push with docker action
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v1
         with:
-          file: server/Dockerfile
-          context: ./server
+          dockerfile: ./server/Dockerfile
           path: server
           push: true
-          tags: 21yrshin/seb44_main_017:latest
+          repository: 21yrshin/seb44_main_017
+          tags: latest
 
       ## docker compose up
       - name: executing remote ssh commands using password
