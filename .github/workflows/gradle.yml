@@ -47,7 +47,7 @@ jobs:
 
       ## Gradle Build
       - name: Build with Gradle
-        run: ./gradlew bootjar
+        run: ./gradlew clean build --scan
 
       ## push to docker hub
       - name: web docker build and push
