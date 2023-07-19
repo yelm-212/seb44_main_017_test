@@ -34,6 +34,9 @@ jobs:
       - name: Change working directory to server directory
         run: cd server
 
+      - name: Set permission for gradlew
+        run: chmod +x ./gradlew
+
       ## Gradle Build
       - name: Build with Gradle
         run: ./gradlew build
