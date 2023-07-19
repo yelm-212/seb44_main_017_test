@@ -40,14 +40,14 @@ jobs:
           distribution: 'temurin'
 
       - name: Set permission for gradlew
-        run: chmod +x ./server/gradlew
+        run: chmod +x ./gradlew
 
 #      - name: Change working directory to server directory
 #        run: cd server
 
       ## Gradle Build
       - name: Build with Gradle
-        run: ./server/gradlew build
+        run: ./gradlew build
 
       ## push to docker hub
       - name: web docker build and push
