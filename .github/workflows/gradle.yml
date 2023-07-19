@@ -61,6 +61,8 @@ jobs:
       - name: web docker build and push with docker action
         uses: docker/build-push-action@v2
         with:
+          file: server/Dockerfile
+          context: ./server
           push: true
           tags: 21yrshin/seb44_main_017:latest
 
