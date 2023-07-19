@@ -22,7 +22,7 @@ defaults:
 
 jobs:
   build:
-    environment: DOCKER_USERNAME
+    environment: docker_on_ec2
     runs-on: ubuntu-latest
 
     steps:
