@@ -56,6 +56,8 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
+        run: | # check secret key works
+          echo ${{ secrets.DOCKER_USERNAME }}
 
       ## push to docker hub
       - name: web docker build and push with docker action
