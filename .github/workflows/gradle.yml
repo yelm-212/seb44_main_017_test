@@ -31,11 +31,11 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
 
+      - name: Set permission for gradlew
+        run: chmod +x ./server/gradlew
+
       - name: Change working directory to server directory
         run: cd server
-
-      - name: Set permission for gradlew
-        run: chmod +x ./gradlew
 
       ## Gradle Build
       - name: Build with Gradle
