@@ -32,21 +32,19 @@ jobs:
         distribution: 'temurin'
         
     ## gradle caching : this makes build time more faster
-    - name: Gradle Caching
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/server/.gradle/caches
-          ~/server/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-        restore-keys: |
-          ${{ runner.os }}-gradle-
+#     - name: Gradle Caching
+#       uses: actions/cache@v3
+#       with:
+#         path: |
+#           ~/server/.gradle/caches
+#           ~/server/.gradle/wrapper
+#         key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+#         restore-keys: |
+#           ${{ runner.os }}-gradle-
         
     ## Gradle Build
     - name: Build with Gradle
-      uses: gradle/gradle-build-action@bd5760595778326ba7f1441bcf7e88b49de61a25 # v2.6.0
-      with:
-        arguments: build
+      run: ./server/gradlew bootJar
 
     ## push to docker hub
     - name: web docker build and push
