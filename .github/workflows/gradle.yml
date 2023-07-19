@@ -63,6 +63,7 @@ jobs:
         with:
           file: server/Dockerfile
           context: ./server
+          path: server
           push: true
           tags: 21yrshin/seb44_main_017:latest
 
