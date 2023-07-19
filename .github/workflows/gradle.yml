@@ -25,6 +25,9 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          ref: be-dev
+          repository: server
 
       - name: Set up JDK 11
         uses: actions/setup-java@v3
@@ -35,8 +38,8 @@ jobs:
       - name: Set permission for gradlew
         run: chmod +x ./server/gradlew
 
-      - name: Change working directory to server directory
-        run: cd server
+#      - name: Change working directory to server directory
+#        run: cd server
 
       ## Gradle Build
       - name: Build with Gradle
