@@ -16,6 +16,10 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    working-directory: server
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -43,7 +47,7 @@ jobs:
 
       ## Gradle Build
       - name: Build with Gradle
-        run: ./gradlew build
+        run: ./server/gradlew build
 
       ## push to docker hub
       - name: web docker build and push
