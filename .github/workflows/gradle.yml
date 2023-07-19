@@ -22,6 +22,7 @@ defaults:
 
 jobs:
   build:
+    environment: DOCKER_USERNAME
     runs-on: ubuntu-latest
 
     steps:
