@@ -71,13 +71,13 @@ jobs:
 
       ## docker compose up
       - name: executing remote ssh commands using password
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v0.1.4
         with:
           host: ${{ secrets.HOST }}
           username: ubuntu
           key: ${{ secrets.KEY }}
           script: |
             sudo docker rm -f $(docker ps -qa)
-            sudo docker pull ${{ secrets.DOCKER_REPO }}/seb44_main_017:latest
+            sudo docker pull 21yrshin/seb44_main_017:latest
             docker-compose up -d --build
             docker image prune -f
