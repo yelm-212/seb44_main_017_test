@@ -51,10 +51,14 @@ jobs:
 
       ## push to docker hub
       - name: web docker build and push
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          DOCKER_REPO: ${{ secrets.DOCKER_REPO }}
         run: |
-          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-          docker build -t ${{ secrets.DOCKER_REPO }}/second-eyes-web .
-          docker push ${{ secrets.DOCKER_REPO }}/second-eyes-web
+          docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+          docker build -t $DOCKER_REPO/seb44_main_017:latest ./
+          docker push $DOCKER_REPO/seb44_main_017:latest
 
       ## docker compose up
       - name: executing remote ssh commands using password
