@@ -62,6 +62,8 @@ jobs:
         uses: docker/build-push-action@v1
         with:
           dockerfile: ./server/Dockerfile
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
           path: server
           push: true
           repository: 21yrshin/seb44_main_017
