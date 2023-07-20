@@ -79,22 +79,32 @@ public class OAuth2MemberSuccessHandler extends SimpleUrlAuthenticationSuccessHa
 
     public void redirect(HttpServletRequest request, HttpServletResponse response, Member member, List<String> authorities) throws IOException {
 
-        if(refreshTokenRepository.existsByMemberId(member.getMemberId()) == true){
-
-            throw new BusinessLogicException(ExceptionCode.ALREADY_LOGGED_IN);
-        }
-
-        String accessToken = delegateAccessToken(member, authorities);
         String refreshToken = delegateRefreshToken(member.getEmail());
+        String accessToken = delegateAccessToken(member, authorities);
         String addedAccessToken = "Bearer " + accessToken;
+
+        if(refreshTokenRepository.existsByMemberId(member.getMemberId()) == true){
+            Optional<RefreshToken> optionalRefreshToken = refreshTokenRepository.findByMemberId(member.getMemberId());
+            RefreshToken findtoken = optionalRefreshToken.get();
+            findtoken.setValue(refreshToken);
+            refreshTokenRepository.save(findtoken);
+        }else{
+            RefreshToken refreshTokenEntity = new RefreshToken();
+            refreshTokenEntity.setValue(refreshToken);
+            refreshTokenEntity.setMemberId(member.getMemberId());
+            refreshTokenService.addRefreshToken(refreshTokenEntity);
+        }
 
         response.setHeader("Authorization", addedAccessToken);
         response.setHeader("Refresh", refreshToken);
+        response.setHeader("roles", "user");
+        response.setHeader("memberId", String.valueOf(member.getMemberId()));
 
-        RefreshToken refreshTokenEntity = new RefreshToken();
-        refreshTokenEntity.setValue(refreshToken);
-        refreshTokenEntity.setMemberId(member.getMemberId());
-        refreshTokenService.addRefreshToken(refreshTokenEntity);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("utf-8");
+        Member fm = memberService.findVerifiedMember(member.getMemberId());
+        response.getWriter().write(fm.getName());
+
 
         String uri = createURI(addedAccessToken, refreshToken).toString();
         getRedirectStrategy().sendRedirect(request, response, uri);
@@ -135,8 +145,8 @@ public class OAuth2MemberSuccessHandler extends SimpleUrlAuthenticationSuccessHa
         return UriComponentsBuilder
                 .newInstance()
                 .scheme("http")
-                .host("localhost")
-                .port(5173)
+                .host("recloset-bucket.s3-website.ap-northeast-2.amazonaws.com")
+                .port(80)
                 .path("/")
                 .queryParams(queryParams)
                 .build()

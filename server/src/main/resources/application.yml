@@ -5,7 +5,7 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${MYSQL_PASSWORD}
   jpa:
-#    database-platform: org.hibernate.dialect.MySQLDialect
+    database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
       ddl-auto: update
     properties:
@@ -15,6 +15,8 @@ spring:
     open-in-view: true
     profiles:
       include: create
+  main:
+    allow-bean-definition-overriding: true
 
   logging:
     level:
@@ -44,7 +46,7 @@ spring:
             client-id: ${K_CLIENT_ID}
             client-secret: ${K_CLIENT_SECRET}
             client-name: Kakao
-            redirect-uri: http://localhost:8080/login/oauth2/code/kakao
+            redirect-uri: http://ec2-43-200-107-103.ap-northeast-2.compute.amazonaws.com:8080/login/oauth2/code/kakao
             authorization-grant-type: authorization_code
             client-authentication-method: POST
             scope:
@@ -74,8 +76,13 @@ mail:
   address:
     admin: admin@gmail.com
 
+elasticsearch:
+  host: mainproject.es.ap-northeast-2.aws.elastic-cloud.com
+  user-key: ${Elastic_key}
+
 jwt:
   admin-key: ${Admin_key}
   key: ${JWT_SECRET_KEY}
   access-token-expiration-minutes: 30
   refresh-token-expiration-minutes: 420
+

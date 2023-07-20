@@ -11,6 +11,7 @@ import com.main.project.auth.jwt.JwtTokenizer;
 import com.main.project.dto.MultiResponseDto;
 import com.main.project.dto.SingleResponseDto;
 import com.main.project.dto.queryget;
+import com.main.project.dto.queryresponse.ProductResponse;
 import com.main.project.exception.businessLogicException.BusinessLogicException;
 import com.main.project.exception.businessLogicException.ExceptionCode;
 import com.main.project.member.entity.RefreshToken;
@@ -23,6 +24,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -49,11 +52,7 @@ public class AdminController {
     @PostMapping("/login")
     public ResponseEntity login(@Valid @RequestBody AdminLoginDto loginDto) throws JsonProcessingException{
         Admin admin = mapper.loginDtoToAdmin(loginDto);
-        Admin fd = adminService.findAdminByEmail(loginDto.getEmail());
 
-        if(refreshTokenRepository.existsByAdminId(fd.getAdminId()) == true){
-            throw new BusinessLogicException(ExceptionCode.ALREADY_LOGGED_IN);
-        }
         Admin authorizedAdmin = adminService.loginAdmin(admin);
         AdminDto.Response responseDto = mapper.adminToAdminResponseDto(authorizedAdmin);
 
@@ -61,13 +60,14 @@ public class AdminController {
 
         Map<String, Object> claims = jwtTokenizer.getClaims(tokenResponseDto.getAtk()).getBody();
         long adminId = Long.parseLong(claims.get("adminId").toString());
-
+        Admin findadmin = adminService.findAdminById(adminId);
         HttpHeaders headers = new HttpHeaders();
         headers.add("Authorization", "Bearer " + tokenResponseDto.getAtk());
         headers.add("Refresh", tokenResponseDto.getRtk());
-        //headers.add("roles", "admin");
+        headers.add("roles", "admin");
+        headers.add("adminId", String.valueOf(findadmin.getAdminId()));
 
-        return new ResponseEntity<>(new SingleResponseDto<>(adminId), headers, HttpStatus.OK);
+        return new ResponseEntity<>(new SingleResponseDto<>(findadmin.getName()), headers, HttpStatus.OK);
 
     }
     @PostMapping
@@ -92,8 +92,8 @@ public class AdminController {
                                       @Positive @RequestParam int size,
                                       @RequestParam(required = false) String sort){
         Long adminId = findAdminId(token);
-        Page<queryget.product> ss = adminService.searchAdminProdcut(adminId,page-1,size,sort, true);
-        List<queryget.product> productList = ss.getContent();
+        Page<ProductResponse> ss = adminService.getAdminProduct(Long.valueOf(adminId),page-1,size,sort,true);
+        List<ProductResponse> productList = ss.getContent();
         return ResponseEntity.ok(new MultiResponseDto(productList,ss));
     }
 
@@ -103,8 +103,8 @@ public class AdminController {
                                         @Positive @RequestParam int size,
                                         @RequestParam(required = false) String sort){
         Long adminId = findAdminId(token);
-        Page<queryget.product> ss = adminService.searchAdminProdcut(adminId,page-1,size,sort, false);
-        List<queryget.product> productList = ss.getContent();
+        Page<ProductResponse> ss = adminService.getAdminProduct(Long.valueOf(adminId),page-1,size,sort,false);
+        List<ProductResponse> productList = ss.getContent();
         return ResponseEntity.ok(new MultiResponseDto(productList,ss));
     }
 
@@ -112,8 +112,8 @@ public class AdminController {
     public ResponseEntity getproductwait(@Positive @RequestParam int page,
                                          @Positive @RequestParam int size,
                                          @RequestParam(required = false) String sort){
-        Page<queryget.product> ss = adminService.searchProdcutwait(page-1,size,sort);
-        List<queryget.product> productList = ss.getContent();
+        Page<ProductResponse> ss = adminService.searchProdcutwait(page-1,size,sort);
+        List<ProductResponse> productList = ss.getContent();
         return ResponseEntity.ok(new MultiResponseDto(productList,ss));
     }
 

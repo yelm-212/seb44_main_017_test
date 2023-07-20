@@ -6,13 +6,18 @@ import com.main.project.dto.queryget;
 import com.main.project.member.entity.Member;
 import com.main.project.exception.businessLogicException.BusinessLogicException;
 import com.main.project.exception.businessLogicException.ExceptionCode;
+import com.main.project.member.entity.RefreshToken;
 import com.main.project.member.service.MemberService;
+import com.main.project.product.controller.dto.ProductDto;
 import com.main.project.product.entity.Product;
 import com.main.project.product.entity.Productdeny;
+import com.main.project.product.mapper.ProductMapper;
 import com.main.project.product.repository.ProductLikeCountRepository;
 import com.main.project.product.repository.ProductRepository;
 import com.main.project.productComment.ProductComment;
 import com.main.project.productComment.repository.ProductCommentRepository;
+import com.main.project.search.document.Eproduct;
+import com.main.project.search.service.EproductService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -21,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Optional;
 
 // Service Layer Implementation
@@ -36,9 +42,13 @@ public class ProductService {
     private final ProductLikeCountService productLikeCountService;
     private final ProductLikeCountRepository productLikeCountRepository;
 
+    private final EproductService eproductService;
+
+    private final ProductMapper mapper;
+
     public ProductService(ProductRepository productRepository, MemberService memberService, ProductCommentRepository productCommentRepository
             , AdminService adminService, ProductdenyService productdenyService, AwsS3Service awsS3Service
-            , ProductLikeCountService productLikeCountService, ProductLikeCountRepository productLikeCountRepository) {
+            , ProductLikeCountService productLikeCountService, ProductLikeCountRepository productLikeCountRepository, ProductMapper mapper, EproductService eproductService) {
         this.productRepository = productRepository;
         this.memberService = memberService;
         this.productCommentRepository = productCommentRepository;
@@ -47,6 +57,8 @@ public class ProductService {
         this.awsS3Service = awsS3Service;
         this.productLikeCountService = productLikeCountService;
         this.productLikeCountRepository = productLikeCountRepository;
+        this.mapper = mapper;
+        this.eproductService = eproductService;
     }
 
     public Page<Product> findProducts(int page, int size) {
@@ -63,15 +75,38 @@ public class ProductService {
         product.setAdmin(findAdmin);
         productLikeCountService.createProductLikeCount(product);
         product.setProductlike(0);
-
-        return productRepository.save(product);
+        Product saveproduct = productRepository.save(product);
+        Eproduct eproduct = mapper.productToEproduct(saveproduct);
+        eproduct.setSell("sale");
+        eproductService.addEproduct(eproduct);
+        return saveproduct;
     }
 
-    public void createProducts(Product product) {
+    public void createProducts(Product product, Long memberId) {
+        Member member = memberService.findVerifiedMember(memberId);
+        product.setMember(member);
         productLikeCountService.createProductLikeCount(product);
         product.setProductlike(0);
+        product.setPrice(0);
+        product.setIssell(false);
+        product.setView(0);
+        Product saveproduct = productRepository.save(product);
 
-        productRepository.save(product);
+        Eproduct eproduct = mapper.productToEproduct(saveproduct);
+        eproduct.setSell("wait");
+        eproductService.addEproduct(eproduct);
+    }
+
+    public Product updatedenyProduct(List<ProductDto.UserPP> productlists, Long productId){
+        Product product = mapper.NproductPatchDtotoProduct(productlists.get(0));
+        Product findproduct = findProduct(productId);
+        Optional.ofNullable(product.getName()).ifPresent(findproduct::setName);
+        Optional.ofNullable(product.getContent()).ifPresent(findproduct::setContent);
+        Optional.ofNullable(product.getCategory()).ifPresent(findproduct::setCategory);
+        findproduct.setAdmin(null);
+        productdenyService.deleteproductdeny(findproduct);
+        return productRepository.save(findproduct);
+
     }
 
     public Product updateProduct(Long productId, Product product) {
@@ -86,8 +121,19 @@ public class ProductService {
         Optional.ofNullable(product.getIssell()).ifPresent(findProduct::setIssell);
         Optional.ofNullable(product.getPointValue()).ifPresent(findProduct::setPointValue);
         Optional.ofNullable(product.getView()).ifPresent(findProduct::setView);
-
-        return productRepository.save(findProduct);
+        Product saveproduct = productRepository.save(findProduct);
+        Eproduct eproduct = mapper.productToEproduct(saveproduct);
+        eproduct.setSell("sale");
+        eproductService.addEproduct(eproduct);
+        return saveproduct;
+    }
+    public Product updateProductview(Long productId, Product product){
+        Product findProduct = findProduct(productId);
+        Optional.ofNullable(product.getView()).ifPresent(findProduct::setView);
+        Product saveproduct = productRepository.save(findProduct);
+        Eproduct eproduct = mapper.productToEproduct(saveproduct);
+        eproductService.addEproduct(eproduct);
+        return saveproduct;
     }
 
     public void deleteProduct(Long productId) {
@@ -98,11 +144,50 @@ public class ProductService {
     public void createProductComment(Product product, Long memberId, ProductComment productComment) {
         Member findMember = memberService.findVerifiedMember(memberId);
         productComment.setProduct(product);
-        productComment.setMember(findMember);
+        productComment.setWriter(findMember);
         productCommentRepository.save(productComment);
 
         findMember.addProductComments(productComment);
         memberService.updateMember(findMember);
+    }
+
+    public ProductDto.ResponseWithComments getResponseWithComments(Long productId, Optional<RefreshToken> refreshToken, Product product) {
+        ProductDto.ResponseWithComments response;
+        if(refreshToken.isEmpty()){
+            response = mapper.productToProductResponseWithComment(product);
+        }
+        else if (refreshToken.get().getMemberId() != null) {
+            Long memberId = refreshToken
+                    .orElseThrow( () -> new BusinessLogicException(ExceptionCode.MEMBER_NOT_FOUND))
+                    .getMemberId();
+            product.addView();
+            updateProductview(productId, product);
+            response = mapper.productToProductResponseWithComment(product, memberId);
+
+        }else if(refreshToken.get().getAdminId() != null){
+            Long AdminId = refreshToken
+                    .orElseThrow( () -> new BusinessLogicException(ExceptionCode.ADMIN_NOT_FOUND))
+                    .getAdminId();
+            response = mapper.productToProductResponseWithComment(product);
+        }else{
+            response = mapper.productToProductResponseWithComment(product);
+        }
+        return response;
+    }
+
+    public void updateProductComment(Product product, Long memberId, Long productCommentId, ProductComment productComment) {
+        Member findMember = memberService.findVerifiedMember(memberId);
+
+        ProductComment findProductComment = productCommentRepository.findById(productCommentId)
+                .orElseThrow(() -> new BusinessLogicException(ExceptionCode.COMMENT_NOT_FOUND));
+
+        Optional.ofNullable(productComment.getContent())
+                .ifPresent(findProductComment::setContent);
+
+        if (findMember.hasProductComment(productComment)){
+            productCommentRepository.save(findProductComment);
+            memberService.updateMember(findMember);
+        }
     }
 
     public void deleteProductComment(Product product, Long memberId, Long productCommentId) {
@@ -186,7 +271,10 @@ public class ProductService {
         product.setProductlike(productLikeCountVal);
 
         memberService.updateMember(findMember);
-        return productRepository.save(product);
+        Product saveproduct = productRepository.save(product);
+        Eproduct eproduct = mapper.productToEproduct(saveproduct);
+        eproductService.addEproduct(eproduct);
+        return saveproduct;
     }
 
 
@@ -198,16 +286,20 @@ public class ProductService {
         productRepository.save(pm);
     }
 
-    public void denyProduct(Long productId, String content){
+    public void denyProduct(Long productId, String content, Admin admin){
         Optional<Product> optionalProduct = productRepository.findById(productId);
         Product findproduct = optionalProduct.orElseThrow(()->new BusinessLogicException(ExceptionCode.PRODUCT_NOT_FOUND));
         if(productdenyService.findByproductId(findproduct) == true) {
             throw new BusinessLogicException(ExceptionCode.PRODUCTDENY_EXISTS);
         }
+        findproduct.setAdmin(admin);
+        productRepository.save(findproduct);
         Productdeny productdeny = new Productdeny();
         productdeny.setDenycontent(content);
         productdeny.setProduct(findproduct);
         productdeny.setMember(findproduct.getMember());
         productdenyService.addProductdeny(productdeny);
     }
+
+
 }
