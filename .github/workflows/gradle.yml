@@ -77,7 +77,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.KEY }}
           script: |
-            docker rm -f spring
-            docker pull 21yrshin/seb44_main_017:latest
+            sudo docker rm -f spring
+            sudo docker pull 21yrshin/seb44_main_017:latest
             docker-compose up -d
             docker image prune -f
