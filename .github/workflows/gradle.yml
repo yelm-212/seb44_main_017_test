@@ -42,9 +42,9 @@ jobs:
       - name: Set permission for gradlew
         run: chmod +x ./gradlew
 
-      ## Gradle Build
+      ## Gradle Build without test
       - name: Build with Gradle
-        run: ./gradlew bootJar
+        run: ./gradlew build -x test
 
       ## Docker with Docker Setup Buildx
 
