@@ -81,9 +81,6 @@ public class ProductService {
         productLikeCountService.createProductLikeCount(product);
         product.setProductlike(0);
         Product saveproduct = productRepository.save(product);
-        Eproduct eproduct = mapper.productToEproduct(saveproduct);
-        eproduct.setSell("sale");
-        eproductService.addEproduct(eproduct);
         return saveproduct;
     }
 
@@ -95,11 +92,8 @@ public class ProductService {
         product.setPrice(0);
         product.setIssell(false);
         product.setView(0);
-        Product saveproduct = productRepository.save(product);
+        productRepository.save(product);
 
-        Eproduct eproduct = mapper.productToEproduct(saveproduct);
-        eproduct.setSell("wait");
-        eproductService.addEproduct(eproduct);
     }
 
     public Product updatedenyProduct(List<ProductDto.UserPP> productlists, Long productId){
@@ -127,13 +121,10 @@ public class ProductService {
         Optional.ofNullable(product.getPointValue()).ifPresent(findProduct::setPointValue);
         Optional.ofNullable(product.getView()).ifPresent(findProduct::setView);
         Product saveproduct = productRepository.save(findProduct);
-        Eproduct eproduct = mapper.productToEproduct(saveproduct);
-        eproduct.setSell("sale");
-        eproductService.addEproduct(eproduct);
         return saveproduct;
     }
 
-    public Product updateProduct(Long productId, Product product, Member member) {
+    public Product updateProduct(Long productId, Product product, Member member, Long AdminId) {
         Product findProduct = findProduct(productId);
         // 초기 등록시에만 OK, 차후 수정시에는 포인트 지급 안함
         boolean flag = false;
@@ -150,12 +141,15 @@ public class ProductService {
         Optional.ofNullable(product.getIssell()).ifPresent(findProduct::setIssell);
         Optional.ofNullable(product.getPointValue()).ifPresent(findProduct::setPointValue);
         Optional.ofNullable(product.getView()).ifPresent(findProduct::setView);
-        Product saveproduct = productRepository.save(findProduct);
-        Eproduct eproduct = mapper.productToEproduct(saveproduct);
-        eproduct.setSell("sale");
-        eproductService.addEproduct(eproduct);
 
-        if (flag) memberService.addMemberMoney(member, findProduct.getPointValue());
+        if (flag) {
+            memberService.addMemberMoney(member, findProduct.getPointValue());
+            Admin admin = adminService.findAdminById(AdminId);
+            findProduct.setAdmin(admin);
+        }
+
+        Product saveproduct = productRepository.save(findProduct);
+
         return saveproduct;
     }
 
@@ -163,8 +157,6 @@ public class ProductService {
         Product findProduct = findProduct(productId);
         Optional.ofNullable(product.getView()).ifPresent(findProduct::setView);
         Product saveproduct = productRepository.save(findProduct);
-        Eproduct eproduct = mapper.productToEproduct(saveproduct);
-        eproductService.addEproduct(eproduct);
         return saveproduct;
     }
 
@@ -253,12 +245,10 @@ public class ProductService {
         if(product.getLikedByMembers().contains(findMember)){
             product.removeLikeByMembers(findMember);
             findMember.removeLikedProducts(product);
-
             productLikeCountService.updateProductLikeCount(product, -1);
         }else{
             product.addLikeByMembers(findMember);
             findMember.addLikedProducts(product);
-
             productLikeCountService.updateProductLikeCount(product, +1);
         }
 
@@ -269,8 +259,6 @@ public class ProductService {
 
         memberService.updateMember(findMember);
         Product saveproduct = productRepository.save(product);
-        Eproduct eproduct = mapper.productToEproduct(saveproduct);
-        eproductService.addEproduct(eproduct);
         return saveproduct;
     }
 
