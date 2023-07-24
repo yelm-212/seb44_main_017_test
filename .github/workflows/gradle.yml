@@ -79,5 +79,5 @@ jobs:
           script: |
             sudo docker rm -f spring
             sudo docker pull 21yrshin/seb44_main_017:latest
-            docker-compose up -d
+            sudo docker-compose up -d
             docker image prune -f
