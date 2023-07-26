@@ -1,2 +1,0 @@
-ElasticSearch, Kibana = 7.17.11
-Logstash = 7.15.2
