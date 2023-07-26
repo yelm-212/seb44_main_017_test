@@ -44,7 +44,7 @@ jobs:
 
       ## Gradle Build without test
       - name: Build with Gradle
-        run: ./gradlew clean build -x test
+        run: ./gradlew clean bootJar -x test
 
       ## Docker with Docker Setup Buildx
 
