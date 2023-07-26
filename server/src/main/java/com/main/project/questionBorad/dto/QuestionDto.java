@@ -1,6 +1,6 @@
 package com.main.project.questionBorad.dto;
 
-import com.main.project.helper.validator.NotSpace;
+import com.main.project.helper.validator.*;
 import com.main.project.member.dto.MemberDto;
 import com.main.project.questionComment.dto.QCommentDto;
 import lombok.*;
